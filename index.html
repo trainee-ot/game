@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <!-- 文档头部：包含网页的元信息和标题 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>过马路小游戏</title>
+    <style>
+        /* CSS样式部分：定义网页的外观和布局 */
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 游戏容器：包含所有游戏元素 */
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: rgba(47, 166, 11, 0.522);
+            /* 天空蓝色背景 */
+        }
+
+        /* 马路样式 */
+        #road {
+            position: absolute;
+            width: 800px;
+            height: 200px;
+            background-color: #333;
+            /* 深灰色马路 */
+            top: 250px;
+            left: 0px;
+        }
+
+        /* 斑马线样式 */
+        #crosswalk {
+            position: absolute;
+            width: 60px;
+            /* 马路的十分之一 */
+            height: 200px;
+            left: 340px;
+            /* 从左往右五分之二位置 (600*0.4 + 100) */
+            top: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 斑马线的白色条纹 */
+        .crosswalk-line {
+            width: 100%;
+            height: 5px;
+            background-color: white;
+        }
+
+        /* 红绿灯杆子 */
+        #traffic-light-pole {
+            position: absolute;
+            width: 10px;
+            height: 80px;
+            background-color: #555;
+            left: 420px;
+            top: 170px;
+        }
+
+        /* 红绿灯盒子 */
+        #traffic-light {
+            position: absolute;
+            width: 50px;
+            height: 100px;
+            background-color: #222;
+            left: 400px;
+            top: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        /* 红绿灯的灯 */
+        .light {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #444;
+        }
+
+        /* 红灯和绿灯的激活状态 */
+        .red.active {
+            background-color: red;
+            box-shadow: 0 0 20px red;
+        }
+
+        .green.active {
+            background-color: green;
+            box-shadow: 0 0 20px green;
+        }
+
+        /* 汽车样式 */
+        /* #car {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background-color: blue;
+            top: 270px;
+            left: 100px;
+            border-radius: 5px;
+        } */
+
+        #car {
+            position: absolute;
+            width: 120px; /* 调整宽度以适应图片 */
+            height: 60px; /* 调整高度以适应图片 */
+            background-image: url('data:image/png;base64,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'); /* 使用本地图片 */
+            background-size: contain; /* 保持图片比例 */
+            background-repeat: no-repeat; /* 不重复图片 */
+            top: 270px;
+            left: 100px;
+        }
+
+        /* 行人样式 */
+        /* #pedestrian {
+            position: absolute;
+            width: 20px;
+            height: 40px;
+            background-color: red;
+            top: 370px;
+            left: 370px;
+            transition: all 0.5s ease;
+        } */
+
+        #pedestrian {
+            position: absolute;
+            width: 58px; /* 调整宽度以适应图片 */
+            height: 80px; /* 调整高度以适应图片 */
+            background-image: url('data:image/png;base64,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'); /* 使用本地图片 */
+            background-size: contain; /* 保持图片比例 */
+            background-repeat: no-repeat; /* 不重复图片 */
+            top: 450px; /* 斑马线下方20px (250+100+20) */
+            left: 340px;
+            transition: all 0.5s ease;
+        }
+
+        /* 状态提示文字 */
+        #status-text {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 错误提示信息 */
+        #error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            color: red;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        /* 成功提示信息 */
+        #success-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            color: red;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 网页主体部分：包含所有游戏元素 -->
+
+    <!-- 游戏主容器 -->
+    <div id="game-container">
+        <!-- 马路 -->
+        <div id="road"></div>
+
+        <!-- 斑马线 -->
+        <div id="crosswalk">
+            <!-- 创建10条斑马线 -->
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+            <div class="crosswalk-line"></div>
+        </div>
+
+        <!-- 红绿灯杆子 -->
+        <div id="traffic-light-pole"></div>
+
+        <!-- 红绿灯 -->
+        <div id="traffic-light">
+            <div class="light red"></div>
+            <div class="light green"></div>
+        </div>
+
+        <!-- 汽车 -->
+        <div id="car"></div>
+
+        <!-- 行人 -->
+        <div id="pedestrian"></div>
+
+        <!-- 状态提示文字 -->
+        <div id="status-text">开始过马路</div>
+
+        <!-- 错误提示信息 -->
+        <div id="error-message">没有成功通过马路</div>
+
+        <!-- 成功提示信息 -->
+        <div id="success-message">恭喜你，成功通过马路！</div>
+    </div>
+
+    <script>
+        // JavaScript部分：控制游戏逻辑和交互
+
+        // 获取DOM元素
+        const gameContainer = document.getElementById('game-container');
+        const redLight = document.querySelector('.red');
+        const greenLight = document.querySelector('.green');
+        const car = document.getElementById('car');
+        const pedestrian = document.getElementById('pedestrian');
+        const statusText = document.getElementById('status-text');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+
+        // 游戏状态变量
+        let clickCount = 0; // 记录点击次数
+        let isRedLight = true; // 当前是否为红灯
+        let carMoving = true; // 汽车是否在移动
+        let carPosition = 100; // 汽车的初始位置
+        let carSpeed = 2; // 汽车移动速度
+        let carAtCrosswalk = false; // 汽车是否在斑马线附近
+        let gameInterval; // 游戏主循环的间隔ID
+        let trafficLightInterval = null;
+
+        // 初始化游戏
+        function initGame() {
+            if (gameInterval !== null) {
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+            if (trafficLightInterval !== null) {
+                clearInterval(trafficLightInterval);
+                trafficLightInterval = null;
+            }
+            // 设置初始状态
+            clickCount = 0;
+            statusText.textContent = "开始过马路";
+            //任务初始位置
+            pedestrian.style.left = "500px"; 
+            pedestrian.style.top = "450px"; 
+            errorMessage.style.display = "none";
+            successMessage.style.display = "none";
+
+            // 启动红绿灯循环,这个操作是让红绿灯在初始化时边带着状态
+            toggleTrafficLight();
+            // 每5秒切换一次红绿灯
+            trafficLightInterval = setInterval(toggleTrafficLight, 5000);
+
+            // 启动游戏主循环
+            gameInterval = setInterval(updateGame, 20);
+        }
+
+        // 切换红绿灯状态
+        function toggleTrafficLight() {
+            isRedLight = !isRedLight;
+
+            // 更新红绿灯显示
+            if (isRedLight) {
+                redLight.classList.add('active');
+                greenLight.classList.remove('active');
+            } else {
+                redLight.classList.remove('active');
+                greenLight.classList.add('active');
+            }
+
+            // 如果汽车在斑马线附近且现在是绿灯，汽车需要停止
+            if (carAtCrosswalk && !isRedLight) {
+                carMoving = false;
+            } else {
+                carMoving = true;
+            }
+        }
+
+        // 游戏主循环
+        function updateGame() {
+            // 更新汽车位置
+            if (carMoving) {
+                carPosition += carSpeed;
+                car.style.left = carPosition + "px";
+
+                // 检查汽车是否到达斑马线附近 (斑马线位置340-400px)
+                if (carPosition > 215 && carPosition < 220) {
+                    carAtCrosswalk = true;
+
+                    // 如果是绿灯，汽车需要停止
+                    if (!isRedLight) {
+                        carMoving = false;
+                    }
+                } else {
+                    carAtCrosswalk = false;
+                }
+
+                // 检查汽车是否到达右边界
+                if (carPosition > 680) {
+                    carPosition = 0; // 从左边重新出现
+                }
+            }
+        }
+
+        // 处理点击事件
+        function handleClick() {
+            clickCount++;
+
+            // 根据点击次数执行不同操作
+            switch (clickCount) {
+                case 1:
+                    // 第一次点击：行人移动到斑马线下方
+                    pedestrian.style.left = "340px"; // 紧贴斑马线
+                    statusText.textContent = "一停";
+                    break;
+                case 2:
+                    // 第二次点击：显示"二看"
+                    statusText.textContent = "二看";
+                    break;
+                case 3:
+                    // 第三次点击：行人尝试过马路
+                    if (isRedLight) {
+                        // 红灯时尝试过马路，显示错误
+                        errorMessage.style.display = "block";
+                        clickCount = 0; // 重置点击次数
+                        setTimeout(() => {
+                            initGame(); // 回到初始状态
+                        }, 2000);
+                    } else {
+                        // 绿灯时可以过马路
+                        successMessage.style.display = "block";
+                        pedestrian.style.top = "165px"; // 移动到斑马线上方
+                        statusText.textContent = "三通过";
+                    }
+                    break;
+                case 4:
+                    // 第四次点击：回到初始状态
+                    initGame();
+                    break;
+            }
+        }
+
+        // 添加点击事件监听器
+        gameContainer.addEventListener('click', handleClick);
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+
+</html>
