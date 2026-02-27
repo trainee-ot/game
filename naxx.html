@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天启四骑士 - 战斗辅助</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'SimHei', '黑体', Arial, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            text-shadow: 0 0 12px #ff6600;
+            font-size: 26px;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+        }
+
+        /* ===== Setup Phase ===== */
+        .setup-container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .input-section {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .input-section h3 {
+            color: #ffd700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 7px;
+            gap: 8px;
+        }
+
+        .input-row label {
+            min-width: 120px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .input-row input[type="text"],
+        .input-row select {
+            flex: 1;
+            background: #0a1628;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .input-row input[type="text"]:focus,
+        .input-row select:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .config-section {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .config-section h3 {
+            color: #ffd700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 6px;
+        }
+
+        .config-note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 36px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #b8860b, #ffd700);
+            color: #1a1a2e;
+        }
+
+        .btn-start:hover {
+            background: linear-gradient(135deg, #ffd700, #ffe866);
+            transform: translateY(-1px);
+        }
+
+        .btn-stop {
+            background: #8b0000;
+            color: #fff;
+        }
+
+        .btn-stop:hover {
+            background: #cc0000;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .error-banner {
+            background: #5c0000;
+            border: 1px solid #cc0000;
+            border-radius: 6px;
+            color: #ffaaaa;
+            padding: 8px 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ===== Battle Phase ===== */
+        .battle-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #16213e;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 16px;
+        }
+
+        .stack-block {
+            text-align: center;
+        }
+
+        .stack-number {
+            font-size: 52px;
+            color: #ffd700;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .stack-label {
+            font-size: 13px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .timer-block {
+            flex: 1;
+            padding: 0 30px;
+        }
+
+        .timer-bar-outer {
+            width: 100%;
+            height: 14px;
+            background: #0a1628;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid #0f3460;
+        }
+
+        .timer-bar-inner {
+            height: 100%;
+            background: linear-gradient(to right, #ffd700, #ff6600);
+            border-radius: 7px;
+            transition: width 0.1s linear;
+        }
+
+        .timer-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .next-event-block {
+            text-align: right;
+            min-width: 200px;
+        }
+
+        .next-event-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+
+        .next-event-text {
+            font-size: 14px;
+            color: #ffb74d;
+            font-weight: bold;
+        }
+
+        /* ===== Boss Cards ===== */
+        .boss-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .boss-card {
+            background: #16213e;
+            border: 2px solid #1a3a6a;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            transition: border-color 0.4s;
+        }
+
+        .boss-card.changed {
+            border-color: #ff6600;
+            animation: cardFlash 0.6s ease 3;
+        }
+
+        @keyframes cardFlash {
+            0%   { border-color: #ff6600; box-shadow: 0 0 12px #ff6600; }
+            50%  { border-color: #ffd700; box-shadow: 0 0 20px #ffd700; }
+            100% { border-color: #ff6600; box-shadow: 0 0 12px #ff6600; }
+        }
+
+        .boss-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1a3a6a;
+        }
+
+        .role-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .tank-name {
+            font-size: 17px;
+            color: #4fc3f7;
+            font-weight: bold;
+            padding: 6px 8px;
+            background: rgba(79, 195, 247, 0.08);
+            border-radius: 5px;
+            border-left: 3px solid #4fc3f7;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .healer-name {
+            font-size: 15px;
+            color: #81c784;
+            padding: 5px 8px;
+            background: rgba(129, 199, 132, 0.08);
+            border-radius: 5px;
+            border-left: 3px solid #81c784;
+            text-align: left;
+            margin-bottom: 5px;
+        }
+
+        .healer-name.returning {
+            color: #ffb74d;
+            border-left-color: #ffb74d;
+            background: rgba(255, 183, 77, 0.08);
+        }
+
+        .no-healer {
+            color: #555;
+            font-size: 13px;
+            font-style: italic;
+            padding: 5px 0;
+        }
+
+        /* ===== Event Log ===== */
+        .event-log {
+            background: #0e1829;
+            border: 1px solid #1a3a6a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .event-log-title {
+            font-size: 11px;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-item {
+            font-size: 13px;
+            color: #777;
+            padding: 2px 0;
+            border-bottom: 1px solid #111d2e;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-item.important {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .event-item .time-tag {
+            color: #444;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #1a3a6a; border-radius: 3px; }
+    </style>
+</head>
+
+<body>
+    <h1>⚔ 天启四骑士战斗辅助 ⚔</h1>
+    <p style="text-align:center;margin-bottom:10px">
+        <a href="index.html" style="color:#888;font-size:12px;text-decoration:none">← 返回过马路小游戏</a>
+    </p>
+
+    <!-- ===== Setup Phase ===== -->
+    <div id="setup-phase">
+        <div class="setup-container">
+            <div id="error-banner" class="error-banner"></div>
+
+            <div class="input-grid">
+                <!-- Tanks -->
+                <div class="input-section">
+                    <h3>坦克配置（7人）</h3>
+                    <div class="input-row">
+                        <label>坦克A（黑马 第1棒）</label>
+                        <input type="text" id="tankA" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克B（黑马 第2棒）</label>
+                        <input type="text" id="tankB" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克C（白马 第1棒）</label>
+                        <input type="text" id="tankC" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克D（白马 第2棒）</label>
+                        <input type="text" id="tankD" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克E（领主 第1棒）</label>
+                        <input type="text" id="tankE" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克F（领主 第2棒）</label>
+                        <input type="text" id="tankF" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>坦克G（矮子）</label>
+                        <input type="text" id="tankG" placeholder="玩家名">
+                    </div>
+                </div>
+
+                <!-- Healers -->
+                <div class="input-section">
+                    <h3>治疗配置（12人）</h3>
+                    <div class="input-row">
+                        <label>治疗1（随坦克A）</label>
+                        <input type="text" id="heal1" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗2（随坦克A）</label>
+                        <input type="text" id="heal2" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗3（随坦克B）</label>
+                        <input type="text" id="heal3" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗4（随坦克B）</label>
+                        <input type="text" id="heal4" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗5（随坦克C）</label>
+                        <input type="text" id="heal5" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗6（随坦克C）</label>
+                        <input type="text" id="heal6" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗7（随坦克D）</label>
+                        <input type="text" id="heal7" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗8（随坦克D）</label>
+                        <input type="text" id="heal8" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗9（随坦克E）</label>
+                        <input type="text" id="heal9" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗10（随坦克E）</label>
+                        <input type="text" id="heal10" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗11（随坦克F）</label>
+                        <input type="text" id="heal11" placeholder="玩家名">
+                    </div>
+                    <div class="input-row">
+                        <label>治疗12（随坦克F）</label>
+                        <input type="text" id="heal12" placeholder="玩家名">
+                    </div>
+                </div>
+            </div>
+
+            <!-- G's healer config -->
+            <div class="config-section">
+                <h3>坦克G（矮子）治疗支援配置</h3>
+                <div class="input-row">
+                    <label>治疗5/6 中哪位支援G</label>
+                    <select id="gHealer56">
+                        <option value="5">治疗5</option>
+                        <option value="6">治疗6</option>
+                    </select>
+                </div>
+                <p class="config-note">※ 第6层时，该治疗归还给坦克C</p>
+                <br>
+                <div class="input-row">
+                    <label>治疗7/8 中哪位支援G</label>
+                    <select id="gHealer78">
+                        <option value="7">治疗7</option>
+                        <option value="8">治疗8</option>
+                    </select>
+                </div>
+                <p class="config-note">※ 第9层时，该治疗归还给坦克D</p>
+            </div>
+
+            <div class="btn-container">
+                <button class="btn btn-start" onclick="startBattle()">▶ 开始战斗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Battle Phase ===== -->
+    <div id="battle-phase" style="display:none">
+        <div class="battle-container">
+
+            <!-- Top bar: stack counter + timer + next event -->
+            <div class="top-bar">
+                <div class="stack-block">
+                    <div class="stack-number" id="stack-display">0</div>
+                    <div class="stack-label">当前层数</div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-bar-outer">
+                        <div class="timer-bar-inner" id="timer-bar" style="width:100%"></div>
+                    </div>
+                    <div class="timer-text">每 12 秒加一层</div>
+                </div>
+                <div class="next-event-block">
+                    <div class="next-event-label">下一重要时机</div>
+                    <div class="next-event-text" id="next-event-text">—</div>
+                </div>
+            </div>
+
+            <!-- Boss cards -->
+            <div class="boss-grid" id="boss-grid"></div>
+
+            <!-- Event log -->
+            <div class="event-log">
+                <div class="event-log-title">📋 战斗记录</div>
+                <div id="event-log-content"></div>
+            </div>
+
+            <div class="btn-container">
+                <button class="btn btn-stop" onclick="stopBattle()">■ 停止战斗</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           State
+        ============================================================ */
+        let stacks = 0;
+        let stackTimer = null;
+        let progressTimer = null;
+        let progressFraction = 0; // 0..1, filled up each 12s cycle
+
+        let tanks = {};       // { A: name, B: name, ... G: name }
+        let healers = {};     // { h1: name, h2: name, ... h12: name }
+        let gHealerFrom56 = null; // healer name (from h5 or h6) assigned to G
+        let gHealerFrom78 = null; // healer name (from h7 or h8) assigned to G
+
+        // Boss rotation order (indices 0=黑马, 1=白马, 2=大领主)
+        const BOSS_CYCLE = ['黑马', '白马', '大领主'];
+        const ALL_BOSSES = ['黑马', '白马', '大领主', '矮子'];
+
+        /* ============================================================
+           Rotation Logic
+           ─────────────────────────────────────────────────────────
+           Non-dwarf tanks follow a cycle: 黑马 → 白马 → 大领主 → 黑马
+           Starting positions:
+             A starts on 黑马 (index 0), C on 白马 (1), E on 大领主 (2)
+           Every 6 stacks the cycle advances by 1 step.
+           Within each 6-stack period:
+             stacks 0-2 (within period): A / C / E group
+             stacks 3-5 (within period): B / D / F group (mirrors A/C/E)
+           G is always on 矮子.
+        ============================================================ */
+        function getAssignment(s) {
+            const period = Math.floor(s / 6);        // 0, 1, 2, …
+            const withinPeriod = s % 6;
+            const isFirstHalf = withinPeriod < 3;   // true→A/C/E, false→B/D/F
+
+            // Boss for each primary tank at this period (shifts +1 each period)
+            const aIdx = period % 3;
+            const cIdx = (1 + period) % 3;
+            const eIdx = (2 + period) % 3;
+
+            const bossToTankKey = {};
+            if (isFirstHalf) {
+                bossToTankKey[BOSS_CYCLE[aIdx]] = 'A';
+                bossToTankKey[BOSS_CYCLE[cIdx]] = 'C';
+                bossToTankKey[BOSS_CYCLE[eIdx]] = 'E';
+            } else {
+                bossToTankKey[BOSS_CYCLE[aIdx]] = 'B';
+                bossToTankKey[BOSS_CYCLE[cIdx]] = 'D';
+                bossToTankKey[BOSS_CYCLE[eIdx]] = 'F';
+            }
+            bossToTankKey['矮子'] = 'G';
+
+            const result = {};
+            for (const boss of ALL_BOSSES) {
+                const key = bossToTankKey[boss];
+                result[boss] = {
+                    tankKey: key,
+                    tankName: tanks[key],
+                    healerNames: getHealersForTank(key, s)
+                };
+            }
+            return result;
+        }
+
+        function getHealersForTank(key, s) {
+            switch (key) {
+                case 'A': return [healers.h1, healers.h2];
+                case 'B': return [healers.h3, healers.h4];
+                case 'C':
+                    // gHealerFrom56 is with G until stack 6
+                    return s < 6
+                        ? [healers.h5, healers.h6].filter(h => h !== gHealerFrom56)
+                        : [healers.h5, healers.h6];
+                case 'D':
+                    // gHealerFrom78 is with G until stack 9
+                    return s < 9
+                        ? [healers.h7, healers.h8].filter(h => h !== gHealerFrom78)
+                        : [healers.h7, healers.h8];
+                case 'E': return [healers.h9, healers.h10];
+                case 'F': return [healers.h11, healers.h12];
+                case 'G': {
+                    const gh = [];
+                    if (s < 6) gh.push(gHealerFrom56);
+                    if (s < 9) gh.push(gHealerFrom78);
+                    return gh;
+                }
+            }
+            return [];
+        }
+
+        /* ============================================================
+           Next important event text
+        ============================================================ */
+        function getNextEventText(s) {
+            // Find next milestone: multiples of 3 (tank swap) or 6 (boss rotate)
+            const milestones = [3, 6, 9, 12, 15, 18, 21, 24];
+            for (const m of milestones) {
+                if (m > s) {
+                    const diff = m - s;
+                    let label = m % 6 === 0 ? 'Boss轮换' : '坦克切换';
+                    if (m === 6) label += ' + 治疗归C';
+                    if (m === 9) label += ' + 治疗归D';
+                    return `第${m}层（${diff}层后） — ${label}`;
+                }
+            }
+            return '战斗循环中';
+        }
+
+        /* ============================================================
+           Start / Stop
+        ============================================================ */
+        function startBattle() {
+            const errorEl = document.getElementById('error-banner');
+            errorEl.style.display = 'none';
+
+            // Collect tanks
+            tanks = {};
+            const tankIds = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+            for (const id of tankIds) {
+                const val = document.getElementById('tank' + id).value.trim();
+                if (!val) {
+                    errorEl.textContent = `请输入坦克 ${id} 的名字`;
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                tanks[id] = val;
+            }
+
+            // Collect healers
+            healers = {};
+            for (let i = 1; i <= 12; i++) {
+                const val = document.getElementById('heal' + i).value.trim();
+                if (!val) {
+                    errorEl.textContent = `请输入治疗 ${i} 的名字`;
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                healers['h' + i] = val;
+            }
+
+            // G's healer assignment
+            const g56 = document.getElementById('gHealer56').value; // '5' or '6'
+            const g78 = document.getElementById('gHealer78').value; // '7' or '8'
+            gHealerFrom56 = healers['h' + g56];
+            gHealerFrom78 = healers['h' + g78];
+
+            // Switch to battle UI
+            stacks = 0;
+            progressFraction = 0;
+            document.getElementById('setup-phase').style.display = 'none';
+            document.getElementById('battle-phase').style.display = 'block';
+            document.getElementById('event-log-content').innerHTML = '';
+
+            updateDisplay(null);
+            addEvent(0, '战斗开始！坦克A/C/E/G就位', true);
+
+            // Stack timer: +1 every 12s
+            stackTimer = setInterval(() => {
+                const prev = getAssignment(stacks);
+                stacks++;
+                progressFraction = 0;
+                const msgs = getStackMessages(stacks);
+                for (const m of msgs) addEvent(stacks, m.text, m.important);
+                updateDisplay(prev);
+            }, 12000);
+
+            // Progress bar: update 10× per second
+            progressTimer = setInterval(() => {
+                progressFraction += 0.1 / 12; // 0→1 over 12s
+                if (progressFraction > 1) progressFraction = 1;
+                document.getElementById('timer-bar').style.width =
+                    (100 * (1 - progressFraction)) + '%';
+            }, 100);
+        }
+
+        function stopBattle() {
+            clearInterval(stackTimer);
+            clearInterval(progressTimer);
+            stackTimer = null;
+            progressTimer = null;
+            document.getElementById('battle-phase').style.display = 'none';
+            document.getElementById('setup-phase').style.display = 'block';
+        }
+
+        /* ============================================================
+           Messages emitted when stacks reaches a milestone
+        ============================================================ */
+        function getStackMessages(s) {
+            const msgs = [];
+            const withinPeriod = s % 6;
+            const period = Math.floor(s / 6);
+
+            if (withinPeriod === 3) {
+                // B/D/F take over
+                const bossB = BOSS_CYCLE[period % 3];
+                const bossD = BOSS_CYCLE[(1 + period) % 3];
+                const bossF = BOSS_CYCLE[(2 + period) % 3];
+                msgs.push({
+                    text: `⚠ 坦克切换！B→${bossB}  D→${bossD}  F→${bossF}`,
+                    important: true
+                });
+            } else if (withinPeriod === 0 && s > 0) {
+                // A/C/E rotate bosses
+                const bossA = BOSS_CYCLE[period % 3];
+                const bossC = BOSS_CYCLE[(1 + period) % 3];
+                const bossE = BOSS_CYCLE[(2 + period) % 3];
+                msgs.push({
+                    text: `⚠ Boss轮换！A→${bossA}  C→${bossC}  E→${bossE}`,
+                    important: true
+                });
+            }
+
+            if (s === 6) {
+                msgs.push({
+                    text: `✦ ${gHealerFrom56} 离开G，归还给坦克C`,
+                    important: true
+                });
+            }
+            if (s === 9) {
+                msgs.push({
+                    text: `✦ ${gHealerFrom78} 离开G，归还给坦克D`,
+                    important: true
+                });
+            }
+            return msgs;
+        }
+
+        /* ============================================================
+           Display update
+        ============================================================ */
+        let prevAssignment = null;
+
+        function updateDisplay(prev) {
+            const assignment = getAssignment(stacks);
+            document.getElementById('stack-display').textContent = stacks;
+            document.getElementById('next-event-text').textContent =
+                getNextEventText(stacks);
+
+            const grid = document.getElementById('boss-grid');
+            grid.innerHTML = '';
+
+            for (const bossName of ALL_BOSSES) {
+                const info = assignment[bossName];
+                const prevInfo = prev ? prev[bossName] : null;
+                const changed = prevInfo && prevInfo.tankKey !== info.tankKey;
+
+                const card = document.createElement('div');
+                card.className = 'boss-card' + (changed ? ' changed' : '');
+
+                // Determine if any healer is newly returning
+                const prevHealers = prevInfo ? prevInfo.healerNames : [];
+                const healerDivs = info.healerNames.map(h => {
+                    const isNew = prevHealers.length > 0 && !prevHealers.includes(h);
+                    return `<div class="healer-name${isNew ? ' returning' : ''}">${h}</div>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="boss-title">${bossName}</div>
+                    <div class="role-label">坦克 T</div>
+                    <div class="tank-name">${info.tankName}</div>
+                    <div class="role-label">治疗 奶</div>
+                    ${info.healerNames.length > 0
+                        ? healerDivs
+                        : '<div class="no-healer">（无专属治疗）</div>'}
+                `;
+                grid.appendChild(card);
+            }
+
+            prevAssignment = assignment;
+        }
+
+        /* ============================================================
+           Event log
+        ============================================================ */
+        function addEvent(s, text, important) {
+            const log = document.getElementById('event-log-content');
+            const div = document.createElement('div');
+            div.className = 'event-item' + (important ? ' important' : '');
+            div.innerHTML = `<span class="time-tag">[第${s}层]</span>${text}`;
+            log.insertBefore(div, log.firstChild);
+            // Keep last 30 entries
+            while (log.children.length > 30) {
+                log.removeChild(log.lastChild);
+            }
+        }
+    </script>
+</body>
+
+</html>
