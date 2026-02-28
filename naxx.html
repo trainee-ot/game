@@ -675,6 +675,9 @@
         let gHealerFrom56 = null; // healer name (from h5 or h6) assigned to G
         let gHealerFrom78 = null; // healer name (from h7 or h8) assigned to G
 
+        // Colors that need white text for readability
+        const DARK_BG_COLORS = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
+
         // Death tracking
         let deadPlayers = new Set();
         let dwarfReplaced = false;
@@ -803,8 +806,7 @@
             const bg = getExcelBgColor(name);
             if (!bg) return `<span class="excel-cell">${name}</span>`;
             // Use white text on dark backgrounds for readability
-            const darkBgs = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
-            const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+            const textColor = DARK_BG_COLORS.includes(bg) ? '#fff' : '#000';
             return `<span class="excel-cell" style="background:${bg};color:${textColor};">${name}</span>`;
         }
 
@@ -1101,8 +1103,7 @@
                     nameSpan.className = 'role-name ' + m.role + (isDead ? ' dead' : '');
                     const bg = getExcelBgColor(m.name);
                     if (bg) {
-                        const darkBgs = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
-                        const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+                        const textColor = DARK_BG_COLORS.includes(bg) ? '#fff' : '#000';
                         nameSpan.style.background = bg;
                         nameSpan.style.color = textColor;
                         nameSpan.style.padding = '1px 6px';
