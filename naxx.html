@@ -711,7 +711,6 @@
         let deadPlayers = new Set();
         let dwarfReplaced = false;
         let replacedTankKey = null; // which tank key (A-F) G replaced
-        let replacedBoss = null;    // which boss G took over (stays frozen)
         let lordDead = false;
 
         // Boss rotation order (indices 0=黑马, 1=白马, 2=大领主)
@@ -752,9 +751,14 @@
             }
             bossToTankKey['矮子'] = 'G';
 
-            // Apply dwarf tank replacement: G stays at the specific boss permanently
-            if (dwarfReplaced && replacedBoss) {
-                bossToTankKey[replacedBoss] = 'G';
+            // Apply dwarf tank replacement: G takes over the dead tank's rotation position
+            if (dwarfReplaced && replacedTankKey) {
+                for (const boss of BOSS_CYCLE) {
+                    if (bossToTankKey[boss] === replacedTankKey) {
+                        bossToTankKey[boss] = 'G';
+                        break;
+                    }
+                }
                 bossToTankKey['矮子'] = null;
             }
 
@@ -884,7 +888,6 @@
             deadPlayers = new Set();
             dwarfReplaced = false;
             replacedTankKey = null;
-            replacedBoss = null;
             lordDead = false;
             const lordBtn = document.getElementById('btn-lord-dead');
             if (lordBtn) lordBtn.disabled = false;
@@ -1207,8 +1210,7 @@
                         if (foundBoss) {
                             dwarfReplaced = true;
                             replacedTankKey = key;
-                            replacedBoss = foundBoss;
-                            addEvent(stacks, `☠ ${playerName}(坦克${key}) 阵亡，${tanks.G} 替换至${foundBoss}`, true);
+                            addEvent(stacks, `☠ ${playerName}(坦克${key}) 阵亡，${tanks.G} 接替坦克${key}的循环位置（当前在${foundBoss}）`, true);
                         }
                         break;
                     }
@@ -1227,7 +1229,6 @@
             if (dwarfReplaced && replacedTankKey && tanks[replacedTankKey] === playerName) {
                 dwarfReplaced = false;
                 replacedTankKey = null;
-                replacedBoss = null;
                 addEvent(stacks, `✦ ${playerName} 复活，${tanks.G} 回归矮子`, true);
             }
 
