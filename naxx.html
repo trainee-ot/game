@@ -159,7 +159,7 @@
 
         /* ===== Battle Phase ===== */
         .battle-container {
-            max-width: 1200px;
+            max-width: 1500px;
             margin: 0 auto;
         }
 
@@ -357,6 +357,113 @@
             font-size: 12px;
         }
 
+        /* ===== Battle Layout ===== */
+        .battle-layout {
+            display: flex;
+            gap: 16px;
+        }
+
+        .battle-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .battle-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .sidebar-group {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-group-title {
+            font-size: 11px;
+            color: #ffd700;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 3px;
+        }
+
+        .sidebar-role {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 13px;
+        }
+
+        .sidebar-role .role-name {
+            flex: 1;
+        }
+
+        .sidebar-role .role-name.tank {
+            color: #4fc3f7;
+        }
+
+        .sidebar-role .role-name.healer {
+            color: #81c784;
+        }
+
+        .sidebar-role .role-name.dead {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .sidebar-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-death, .btn-resurrect {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 22px;
+            text-align: center;
+            padding: 0;
+        }
+
+        .btn-death {
+            background: #8b0000;
+            color: #fff;
+        }
+
+        .btn-death:hover {
+            background: #cc0000;
+        }
+
+        .btn-resurrect {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .btn-resurrect:hover {
+            background: #43a047;
+        }
+
+        .next-group-label {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+            text-align: center;
+            border-top: 1px dashed #1a3a6a;
+            padding-top: 10px;
+        }
+
+        .boss-grid.preview {
+            opacity: 0.7;
+        }
+
         /* ===== Scrollbar ===== */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a1628; }
@@ -482,7 +589,7 @@
                         <option value="8">治疗8</option>
                     </select>
                 </div>
-                <p class="config-note">※ 第9层时，该治疗归还给坦克D</p>
+                <p class="config-note">※ 第6层时，该治疗归还给坦克D</p>
             </div>
 
             <div class="btn-container">
@@ -491,39 +598,50 @@
         </div>
     </div>
 
-    <!-- ===== Battle Phase ===== -->
     <div id="battle-phase" style="display:none">
         <div class="battle-container">
+            <div class="battle-layout">
+                <div class="battle-main">
 
-            <!-- Top bar: stack counter + timer + next event -->
-            <div class="top-bar">
-                <div class="stack-block">
-                    <div class="stack-number" id="stack-display">0</div>
-                    <div class="stack-label">当前层数</div>
-                </div>
-                <div class="timer-block">
-                    <div class="timer-bar-outer">
-                        <div class="timer-bar-inner" id="timer-bar" style="width:100%"></div>
+                    <!-- Top bar: stack counter + timer + next event -->
+                    <div class="top-bar">
+                        <div class="stack-block">
+                            <div class="stack-number" id="stack-display">0</div>
+                            <div class="stack-label">当前层数</div>
+                        </div>
+                        <div class="timer-block">
+                            <div class="timer-bar-outer">
+                                <div class="timer-bar-inner" id="timer-bar" style="width:100%"></div>
+                            </div>
+                            <div class="timer-text">每 12 秒加一层</div>
+                        </div>
+                        <div class="next-event-block">
+                            <div class="next-event-label">下一重要时机</div>
+                            <div class="next-event-text" id="next-event-text">—</div>
+                        </div>
                     </div>
-                    <div class="timer-text">每 12 秒加一层</div>
+
+                    <!-- Boss cards - Current -->
+                    <div class="boss-grid" id="boss-grid"></div>
+
+                    <!-- Boss cards - Next group -->
+                    <div class="next-group-section">
+                        <div class="next-group-label">▼ 下一组 ▼</div>
+                        <div class="boss-grid preview" id="boss-grid-next"></div>
+                    </div>
+
+                    <!-- Event log -->
+                    <div class="event-log">
+                        <div class="event-log-title">📋 战斗记录</div>
+                        <div id="event-log-content"></div>
+                    </div>
+
+                    <div class="btn-container">
+                        <button class="btn btn-stop" onclick="stopBattle()">■ 停止战斗</button>
+                    </div>
+
                 </div>
-                <div class="next-event-block">
-                    <div class="next-event-label">下一重要时机</div>
-                    <div class="next-event-text" id="next-event-text">—</div>
-                </div>
-            </div>
-
-            <!-- Boss cards -->
-            <div class="boss-grid" id="boss-grid"></div>
-
-            <!-- Event log -->
-            <div class="event-log">
-                <div class="event-log-title">📋 战斗记录</div>
-                <div id="event-log-content"></div>
-            </div>
-
-            <div class="btn-container">
-                <button class="btn btn-stop" onclick="stopBattle()">■ 停止战斗</button>
+                <div class="battle-sidebar" id="battle-sidebar"></div>
             </div>
         </div>
     </div>
@@ -541,6 +659,11 @@
         let healers = {};     // { h1: name, h2: name, ... h12: name }
         let gHealerFrom56 = null; // healer name (from h5 or h6) assigned to G
         let gHealerFrom78 = null; // healer name (from h7 or h8) assigned to G
+
+        // Death tracking
+        let deadPlayers = new Set();
+        let dwarfReplaced = false;
+        let replacedTankKey = null; // which tank key (A-F) G replaced
 
         // Boss rotation order (indices 0=黑马, 1=白马, 2=大领主)
         const BOSS_CYCLE = ['黑马', '白马', '大领主'];
@@ -580,13 +703,32 @@
             }
             bossToTankKey['矮子'] = 'G';
 
+            // Apply dwarf tank replacement for first dead tank
+            if (dwarfReplaced && replacedTankKey) {
+                let replaced = false;
+                for (const boss of BOSS_CYCLE) {
+                    if (bossToTankKey[boss] === replacedTankKey) {
+                        bossToTankKey[boss] = 'G';
+                        bossToTankKey['矮子'] = null;
+                        replaced = true;
+                        break;
+                    }
+                }
+                // If replaced tank is not active this half, G stays on dwarf
+                if (!replaced) {
+                    bossToTankKey['矮子'] = 'G';
+                }
+            }
+
             const result = {};
             for (const boss of ALL_BOSSES) {
                 const key = bossToTankKey[boss];
+                const tankName = key ? tanks[key] : null;
+                const isDead = tankName ? deadPlayers.has(tankName) : false;
                 result[boss] = {
                     tankKey: key,
-                    tankName: tanks[key],
-                    healerNames: getHealersForTank(key, s)
+                    tankName: isDead ? null : tankName,
+                    healerNames: key ? getHealersForTank(key, s).filter(h => h && !deadPlayers.has(h)) : []
                 };
             }
             return result;
@@ -594,24 +736,24 @@
 
         function getHealersForTank(key, s) {
             switch (key) {
-                case 'A': return [healers.h1, healers.h2];
-                case 'B': return [healers.h3, healers.h4];
+                case 'A': return [healers.h1, healers.h2].filter(Boolean);
+                case 'B': return [healers.h3, healers.h4].filter(Boolean);
                 case 'C':
                     // gHealerFrom56 is with G until stack 6
                     return s < 6
-                        ? [healers.h5, healers.h6].filter(h => h !== gHealerFrom56)
-                        : [healers.h5, healers.h6];
+                        ? [healers.h5, healers.h6].filter(h => h && h !== gHealerFrom56)
+                        : [healers.h5, healers.h6].filter(Boolean);
                 case 'D':
-                    // gHealerFrom78 is with G until stack 9
-                    return s < 9
-                        ? [healers.h7, healers.h8].filter(h => h !== gHealerFrom78)
-                        : [healers.h7, healers.h8];
-                case 'E': return [healers.h9, healers.h10];
-                case 'F': return [healers.h11, healers.h12];
+                    // gHealerFrom78 is with G until stack 6 (all dwarf healers return at 6)
+                    return s < 6
+                        ? [healers.h7, healers.h8].filter(h => h && h !== gHealerFrom78)
+                        : [healers.h7, healers.h8].filter(Boolean);
+                case 'E': return [healers.h9, healers.h10].filter(Boolean);
+                case 'F': return [healers.h11, healers.h12].filter(Boolean);
                 case 'G': {
                     const gh = [];
-                    if (s < 6) gh.push(gHealerFrom56);
-                    if (s < 9) gh.push(gHealerFrom78);
+                    if (s < 6 && gHealerFrom56) gh.push(gHealerFrom56);
+                    if (s < 6 && gHealerFrom78) gh.push(gHealerFrom78);
                     return gh;
                 }
             }
@@ -628,8 +770,7 @@
                 if (m > s) {
                     const diff = m - s;
                     let label = m % 6 === 0 ? 'Boss轮换' : '坦克切换';
-                    if (m === 6) label += ' + 治疗归C';
-                    if (m === 9) label += ' + 治疗归D';
+                    if (m === 6) label += ' + 治疗全部归回';
                     return `第${m}层（${diff}层后） — ${label}`;
                 }
             }
@@ -643,7 +784,7 @@
             const errorEl = document.getElementById('error-banner');
             errorEl.style.display = 'none';
 
-            // Collect tanks
+            // Collect tanks (required)
             tanks = {};
             const tankIds = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
             for (const id of tankIds) {
@@ -656,23 +797,23 @@
                 tanks[id] = val;
             }
 
-            // Collect healers
+            // Collect healers (optional, empty is allowed)
             healers = {};
             for (let i = 1; i <= 12; i++) {
                 const val = document.getElementById('heal' + i).value.trim();
-                if (!val) {
-                    errorEl.textContent = `请输入治疗 ${i} 的名字`;
-                    errorEl.style.display = 'block';
-                    return;
-                }
-                healers['h' + i] = val;
+                healers['h' + i] = val || '';
             }
 
             // G's healer assignment
             const g56 = document.getElementById('gHealer56').value; // '5' or '6'
             const g78 = document.getElementById('gHealer78').value; // '7' or '8'
-            gHealerFrom56 = healers['h' + g56];
-            gHealerFrom78 = healers['h' + g78];
+            gHealerFrom56 = healers['h' + g56] || null;
+            gHealerFrom78 = healers['h' + g78] || null;
+
+            // Reset death tracking
+            deadPlayers = new Set();
+            dwarfReplaced = false;
+            replacedTankKey = null;
 
             // Switch to battle UI
             stacks = 0;
@@ -681,6 +822,7 @@
             document.getElementById('battle-phase').style.display = 'block';
             document.getElementById('event-log-content').innerHTML = '';
 
+            renderSidebar();
             updateDisplay(null);
             addEvent(0, '战斗开始！坦克A/C/E/G就位', true);
 
@@ -741,16 +883,18 @@
             }
 
             if (s === 6) {
-                msgs.push({
-                    text: `✦ ${gHealerFrom56} 离开G，归还给坦克C`,
-                    important: true
-                });
-            }
-            if (s === 9) {
-                msgs.push({
-                    text: `✦ ${gHealerFrom78} 离开G，归还给坦克D`,
-                    important: true
-                });
+                if (gHealerFrom56) {
+                    msgs.push({
+                        text: `✦ ${gHealerFrom56} 离开G，归还给坦克C`,
+                        important: true
+                    });
+                }
+                if (gHealerFrom78) {
+                    msgs.push({
+                        text: `✦ ${gHealerFrom78} 离开G，归还给坦克D`,
+                        important: true
+                    });
+                }
             }
             return msgs;
         }
@@ -787,13 +931,38 @@
                 card.innerHTML = `
                     <div class="boss-title">${bossName}</div>
                     <div class="role-label">坦克 T</div>
-                    <div class="tank-name">${info.tankName}</div>
-                    <div class="role-label">治疗 奶</div>
+                    <div class="tank-name">${info.tankName || '（空缺）'}</div>
                     ${info.healerNames.length > 0
-                        ? healerDivs
-                        : '<div class="no-healer">（无专属治疗）</div>'}
+                        ? `<div class="role-label">治疗 奶</div>${healerDivs}`
+                        : ''}
                 `;
                 grid.appendChild(card);
+            }
+
+            // Render next group preview
+            const nextSwapStack = (Math.floor(stacks / 3) + 1) * 3;
+            const nextAssignment = getAssignment(nextSwapStack);
+            const nextGrid = document.getElementById('boss-grid-next');
+            nextGrid.innerHTML = '';
+
+            for (const bossName of ALL_BOSSES) {
+                const info = nextAssignment[bossName];
+                const card = document.createElement('div');
+                card.className = 'boss-card';
+
+                const healerDivs = info.healerNames.map(h => {
+                    return `<div class="healer-name">${h}</div>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="boss-title">${bossName}</div>
+                    <div class="role-label">坦克 T</div>
+                    <div class="tank-name">${info.tankName || '（空缺）'}</div>
+                    ${info.healerNames.length > 0
+                        ? `<div class="role-label">治疗 奶</div>${healerDivs}`
+                        : ''}
+                `;
+                nextGrid.appendChild(card);
             }
 
             prevAssignment = assignment;
@@ -812,6 +981,134 @@
             while (log.children.length > 30) {
                 log.removeChild(log.lastChild);
             }
+        }
+
+        /* ============================================================
+           Sidebar: group display with death/resurrect buttons
+        ============================================================ */
+        function getGroups() {
+            return [
+                { label: '第1组（坦克A）', members: [
+                    { name: tanks.A, role: 'tank', label: '坦克A' },
+                    { name: healers.h1, role: 'healer', label: '治疗1' },
+                    { name: healers.h2, role: 'healer', label: '治疗2' }
+                ]},
+                { label: '第2组（坦克B）', members: [
+                    { name: tanks.B, role: 'tank', label: '坦克B' },
+                    { name: healers.h3, role: 'healer', label: '治疗3' },
+                    { name: healers.h4, role: 'healer', label: '治疗4' }
+                ]},
+                { label: '第3组（坦克C）', members: [
+                    { name: tanks.C, role: 'tank', label: '坦克C' },
+                    { name: healers.h5, role: 'healer', label: '治疗5' },
+                    { name: healers.h6, role: 'healer', label: '治疗6' }
+                ]},
+                { label: '第4组（坦克D）', members: [
+                    { name: tanks.D, role: 'tank', label: '坦克D' },
+                    { name: healers.h7, role: 'healer', label: '治疗7' },
+                    { name: healers.h8, role: 'healer', label: '治疗8' }
+                ]},
+                { label: '第5组（坦克E）', members: [
+                    { name: tanks.E, role: 'tank', label: '坦克E' },
+                    { name: healers.h9, role: 'healer', label: '治疗9' },
+                    { name: healers.h10, role: 'healer', label: '治疗10' }
+                ]},
+                { label: '第6组（坦克F）', members: [
+                    { name: tanks.F, role: 'tank', label: '坦克F' },
+                    { name: healers.h11, role: 'healer', label: '治疗11' },
+                    { name: healers.h12, role: 'healer', label: '治疗12' }
+                ]},
+                { label: '第7组（矮子）', members: [
+                    { name: tanks.G, role: 'tank', label: '坦克G' }
+                ]}
+            ];
+        }
+
+        function renderSidebar() {
+            const sidebar = document.getElementById('battle-sidebar');
+            const groups = getGroups();
+            sidebar.innerHTML = '';
+
+            for (let gi = 0; gi < groups.length; gi++) {
+                const group = groups[gi];
+                const div = document.createElement('div');
+                div.className = 'sidebar-group';
+
+                const title = document.createElement('div');
+                title.className = 'sidebar-group-title';
+                title.textContent = group.label;
+                div.appendChild(title);
+
+                for (let mi = 0; mi < group.members.length; mi++) {
+                    const m = group.members[mi];
+                    if (!m.name) continue;
+                    const isDead = deadPlayers.has(m.name);
+
+                    const row = document.createElement('div');
+                    row.className = 'sidebar-role';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'role-name ' + m.role + (isDead ? ' dead' : '');
+                    nameSpan.textContent = m.name;
+
+                    const btnsDiv = document.createElement('div');
+                    btnsDiv.className = 'sidebar-btns';
+
+                    const deathBtn = document.createElement('button');
+                    deathBtn.className = 'btn-death';
+                    deathBtn.title = '标记死亡';
+                    deathBtn.textContent = '☠';
+                    deathBtn.addEventListener('click', () => markDead(m.name));
+
+                    const resBtn = document.createElement('button');
+                    resBtn.className = 'btn-resurrect';
+                    resBtn.title = '标记复活';
+                    resBtn.textContent = '♻';
+                    resBtn.addEventListener('click', () => markAlive(m.name));
+
+                    btnsDiv.appendChild(deathBtn);
+                    btnsDiv.appendChild(resBtn);
+                    row.appendChild(nameSpan);
+                    row.appendChild(btnsDiv);
+                    div.appendChild(row);
+                }
+                sidebar.appendChild(div);
+            }
+        }
+
+        function markDead(playerName) {
+            if (deadPlayers.has(playerName)) return;
+            deadPlayers.add(playerName);
+
+            // Check if this is a non-G tank and dwarf hasn't replaced anyone yet
+            if (!dwarfReplaced) {
+                for (const key of ['A', 'B', 'C', 'D', 'E', 'F']) {
+                    if (tanks[key] === playerName) {
+                        dwarfReplaced = true;
+                        replacedTankKey = key;
+                        addEvent(stacks, `☠ ${playerName}(坦克${key}) 阵亡，${tanks.G} 替换其位置`, true);
+                        break;
+                    }
+                }
+            }
+
+            renderSidebar();
+            updateDisplay(null);
+        }
+
+        function markAlive(playerName) {
+            if (!deadPlayers.has(playerName)) return;
+            deadPlayers.delete(playerName);
+
+            // If the resurrected player was the one G replaced, undo replacement
+            if (dwarfReplaced && replacedTankKey && tanks[replacedTankKey] === playerName) {
+                dwarfReplaced = false;
+                replacedTankKey = null;
+                addEvent(stacks, `✦ ${playerName} 复活，${tanks.G} 回归矮子`, true);
+            }
+
+            renderSidebar();
+            updateDisplay(null);
         }
     </script>
 </body>
