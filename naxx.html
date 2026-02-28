@@ -734,7 +734,8 @@
                 const tankName = key ? tanks[key] : null;
                 const isDead = tankName ? deadPlayers.has(tankName) : false;
                 let healerNames = key ? getHealersForTank(key, s).filter(h => h && !deadPlayers.has(h)) : [];
-                // When G replaces a dead tank, also bind the dead tank's healers to G
+                // When dwarf tank G replaces a dead tank (dwarfReplaced=true, replacedTankKey set),
+                // the dead tank's healers follow G wherever G is positioned.
                 if (dwarfReplaced && replacedTankKey && key === 'G') {
                     const extraHealers = getHealersForTank(replacedTankKey, s)
                         .filter(h => h && !deadPlayers.has(h) && !healerNames.includes(h));
@@ -793,8 +794,11 @@
 
         function excelCellHtml(name) {
             const bg = getExcelBgColor(name);
-            const style = bg ? `background:${bg};` : '';
-            return `<span class="excel-cell" style="${style}">${name}</span>`;
+            if (!bg) return `<span class="excel-cell">${name}</span>`;
+            // Use white text on dark backgrounds for readability
+            const darkBgs = ['#E26B0A', '#0070C0'];
+            const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+            return `<span class="excel-cell" style="background:${bg};color:${textColor};">${name}</span>`;
         }
 
         /* ============================================================
