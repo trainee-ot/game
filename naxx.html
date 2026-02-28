@@ -1034,23 +1034,44 @@
                 const div = document.createElement('div');
                 div.className = 'sidebar-group';
 
-                let html = `<div class="sidebar-group-title">${group.label}</div>`;
+                const title = document.createElement('div');
+                title.className = 'sidebar-group-title';
+                title.textContent = group.label;
+                div.appendChild(title);
+
                 for (let mi = 0; mi < group.members.length; mi++) {
                     const m = group.members[mi];
                     if (!m.name) continue;
                     const isDead = deadPlayers.has(m.name);
-                    const safeName = encodeURIComponent(m.name);
-                    html += `
-                        <div class="sidebar-role">
-                            <span class="role-name ${m.role}${isDead ? ' dead' : ''}">${m.name}</span>
-                            <div class="sidebar-btns">
-                                <button class="btn-death" onclick="markDead(decodeURIComponent('${safeName}'))" title="标记死亡">☠</button>
-                                <button class="btn-resurrect" onclick="markAlive(decodeURIComponent('${safeName}'))" title="标记复活">♻</button>
-                            </div>
-                        </div>
-                    `;
+
+                    const row = document.createElement('div');
+                    row.className = 'sidebar-role';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'role-name ' + m.role + (isDead ? ' dead' : '');
+                    nameSpan.textContent = m.name;
+
+                    const btnsDiv = document.createElement('div');
+                    btnsDiv.className = 'sidebar-btns';
+
+                    const deathBtn = document.createElement('button');
+                    deathBtn.className = 'btn-death';
+                    deathBtn.title = '标记死亡';
+                    deathBtn.textContent = '☠';
+                    deathBtn.addEventListener('click', () => markDead(m.name));
+
+                    const resBtn = document.createElement('button');
+                    resBtn.className = 'btn-resurrect';
+                    resBtn.title = '标记复活';
+                    resBtn.textContent = '♻';
+                    resBtn.addEventListener('click', () => markAlive(m.name));
+
+                    btnsDiv.appendChild(deathBtn);
+                    btnsDiv.appendChild(resBtn);
+                    row.appendChild(nameSpan);
+                    row.appendChild(btnsDiv);
+                    div.appendChild(row);
                 }
-                div.innerHTML = html;
                 sidebar.appendChild(div);
             }
         }
