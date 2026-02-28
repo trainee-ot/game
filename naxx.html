@@ -282,31 +282,32 @@
         }
 
         .tank-name {
-            font-size: 17px;
+            font-size: 22px;
             color: #4fc3f7;
             font-weight: bold;
-            padding: 6px 8px;
+            padding: 8px 10px;
             background: rgba(79, 195, 247, 0.08);
             border-radius: 5px;
-            border-left: 3px solid #4fc3f7;
-            text-align: left;
+            border: 2px solid #4fc3f7;
+            text-align: center;
             margin-bottom: 10px;
         }
 
         .healer-name {
-            font-size: 15px;
+            font-size: 19px;
             color: #81c784;
-            padding: 5px 8px;
+            font-weight: bold;
+            padding: 7px 10px;
             background: rgba(129, 199, 132, 0.08);
             border-radius: 5px;
-            border-left: 3px solid #81c784;
-            text-align: left;
+            border: 2px solid #81c784;
+            text-align: center;
             margin-bottom: 5px;
         }
 
         .healer-name.returning {
             color: #ffb74d;
-            border-left-color: #ffb74d;
+            border-color: #ffb74d;
             background: rgba(255, 183, 77, 0.08);
         }
 
@@ -479,6 +480,18 @@
             min-width: 40px;
             text-align: center;
         }
+
+        .tank-name .excel-cell {
+            font-size: 20px;
+            padding: 3px 10px;
+            min-width: 50px;
+        }
+
+        .healer-name .excel-cell {
+            font-size: 17px;
+            padding: 3px 8px;
+            min-width: 45px;
+        }
     </style>
 </head>
 
@@ -638,12 +651,6 @@
                         <div class="boss-grid preview" id="boss-grid-next"></div>
                     </div>
 
-                    <!-- Event log -->
-                    <div class="event-log">
-                        <div class="event-log-title">📋 战斗记录</div>
-                        <div id="event-log-content"></div>
-                    </div>
-
                     <div class="btn-container">
                         <button class="btn btn-stop" onclick="stopBattle()">■ 停止战斗</button>
                     </div>
@@ -778,17 +785,17 @@
 
         /* ============================================================
            Excel-style background color based on character name
-           色号来自Excel主题色：
-           深橙1 = #E26B0A, 橙 = #FFC000, 蓝 = #0070C0,
-           浅灰2 = #D9D9D9, 浅红3 = #D99694
+           色号：
+           德 = 深橙1 #E26B0A, 战 = 褐色 #8B4513, 萨 = 蓝 #0070C0,
+           牧 = 浅灰2 #D9D9D9, 骑 = 深粉 #E75480
         ============================================================ */
         function getExcelBgColor(name) {
             if (!name) return '';
-            if (name.includes('战')) return '#E26B0A'; // 深橙1
-            if (name.includes('德')) return '#FFC000'; // 橙
+            if (name.includes('德')) return '#E26B0A'; // 深橙1
+            if (name.includes('战')) return '#8B4513'; // 褐色
             if (name.includes('萨')) return '#0070C0'; // 蓝
             if (name.includes('牧')) return '#D9D9D9'; // 浅灰2
-            if (name.includes('骑')) return '#D99694'; // 浅红3
+            if (name.includes('骑')) return '#E75480'; // 深粉色
             return '';
         }
 
@@ -796,7 +803,7 @@
             const bg = getExcelBgColor(name);
             if (!bg) return `<span class="excel-cell">${name}</span>`;
             // Use white text on dark backgrounds for readability
-            const darkBgs = ['#E26B0A', '#0070C0'];
+            const darkBgs = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
             const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
             return `<span class="excel-cell" style="background:${bg};color:${textColor};">${name}</span>`;
         }
@@ -861,7 +868,8 @@
             progressFraction = 0;
             document.getElementById('setup-phase').style.display = 'none';
             document.getElementById('battle-phase').style.display = 'block';
-            document.getElementById('event-log-content').innerHTML = '';
+            const logEl = document.getElementById('event-log-content');
+            if (logEl) logEl.innerHTML = '';
 
             renderSidebar();
             updateDisplay(null);
@@ -1014,6 +1022,7 @@
         ============================================================ */
         function addEvent(s, text, important) {
             const log = document.getElementById('event-log-content');
+            if (!log) return;
             const div = document.createElement('div');
             div.className = 'event-item' + (important ? ' important' : '');
             div.innerHTML = `<span class="time-tag">[第${s}层]</span>${text}`;
@@ -1090,6 +1099,15 @@
 
                     const nameSpan = document.createElement('span');
                     nameSpan.className = 'role-name ' + m.role + (isDead ? ' dead' : '');
+                    const bg = getExcelBgColor(m.name);
+                    if (bg) {
+                        const darkBgs = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
+                        const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+                        nameSpan.style.background = bg;
+                        nameSpan.style.color = textColor;
+                        nameSpan.style.padding = '1px 6px';
+                        nameSpan.style.borderRadius = '3px';
+                    }
                     nameSpan.textContent = m.name;
 
                     const btnsDiv = document.createElement('div');
