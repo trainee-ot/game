@@ -282,31 +282,32 @@
         }
 
         .tank-name {
-            font-size: 17px;
+            font-size: 22px;
             color: #4fc3f7;
             font-weight: bold;
-            padding: 6px 8px;
+            padding: 8px 10px;
             background: rgba(79, 195, 247, 0.08);
             border-radius: 5px;
-            border-left: 3px solid #4fc3f7;
-            text-align: left;
+            border: 2px solid #4fc3f7;
+            text-align: center;
             margin-bottom: 10px;
         }
 
         .healer-name {
-            font-size: 15px;
+            font-size: 19px;
             color: #81c784;
-            padding: 5px 8px;
+            font-weight: bold;
+            padding: 7px 10px;
             background: rgba(129, 199, 132, 0.08);
             border-radius: 5px;
-            border-left: 3px solid #81c784;
-            text-align: left;
+            border: 2px solid #81c784;
+            text-align: center;
             margin-bottom: 5px;
         }
 
         .healer-name.returning {
             color: #ffb74d;
-            border-left-color: #ffb74d;
+            border-color: #ffb74d;
             background: rgba(255, 183, 77, 0.08);
         }
 
@@ -479,6 +480,46 @@
             min-width: 40px;
             text-align: center;
         }
+
+        .tank-name .excel-cell {
+            font-size: 20px;
+            padding: 3px 10px;
+            min-width: 50px;
+        }
+
+        .healer-name .excel-cell {
+            font-size: 17px;
+            padding: 3px 8px;
+            min-width: 45px;
+        }
+
+        .boss-card.boss-dead {
+            opacity: 0.5;
+            border-color: #555;
+        }
+
+        .boss-dead-label {
+            color: #ff4444;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .btn-lord-dead {
+            background: #4a0080;
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .btn-lord-dead:hover {
+            background: #6b00b3;
+        }
+
+        .btn-lord-dead:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -638,13 +679,8 @@
                         <div class="boss-grid preview" id="boss-grid-next"></div>
                     </div>
 
-                    <!-- Event log -->
-                    <div class="event-log">
-                        <div class="event-log-title">📋 战斗记录</div>
-                        <div id="event-log-content"></div>
-                    </div>
-
                     <div class="btn-container">
+                        <button class="btn btn-lord-dead" id="btn-lord-dead" onclick="markLordDead()">💀 大领主死亡</button>
                         <button class="btn btn-stop" onclick="stopBattle()">■ 停止战斗</button>
                     </div>
 
@@ -668,10 +704,15 @@
         let gHealerFrom56 = null; // healer name (from h5 or h6) assigned to G
         let gHealerFrom78 = null; // healer name (from h7 or h8) assigned to G
 
+        // Colors that need white text for readability
+        const DARK_BG_COLORS = ['#E26B0A', '#8B4513', '#0070C0', '#E75480'];
+
         // Death tracking
         let deadPlayers = new Set();
         let dwarfReplaced = false;
         let replacedTankKey = null; // which tank key (A-F) G replaced
+        let replacedBoss = null;    // which boss G took over (stays frozen)
+        let lordDead = false;
 
         // Boss rotation order (indices 0=黑马, 1=白马, 2=大领主)
         const BOSS_CYCLE = ['黑马', '白马', '大领主'];
@@ -711,21 +752,10 @@
             }
             bossToTankKey['矮子'] = 'G';
 
-            // Apply dwarf tank replacement for first dead tank
-            if (dwarfReplaced && replacedTankKey) {
-                let replaced = false;
-                for (const boss of BOSS_CYCLE) {
-                    if (bossToTankKey[boss] === replacedTankKey) {
-                        bossToTankKey[boss] = 'G';
-                        bossToTankKey['矮子'] = null;
-                        replaced = true;
-                        break;
-                    }
-                }
-                // If replaced tank is not active this half, G stays on dwarf
-                if (!replaced) {
-                    bossToTankKey['矮子'] = 'G';
-                }
+            // Apply dwarf tank replacement: G stays at the specific boss permanently
+            if (dwarfReplaced && replacedBoss) {
+                bossToTankKey[replacedBoss] = 'G';
+                bossToTankKey['矮子'] = null;
             }
 
             const result = {};
@@ -778,17 +808,17 @@
 
         /* ============================================================
            Excel-style background color based on character name
-           色号来自Excel主题色：
-           深橙1 = #E26B0A, 橙 = #FFC000, 蓝 = #0070C0,
-           浅灰2 = #D9D9D9, 浅红3 = #D99694
+           色号：
+           德 = 深橙1 #E26B0A, 战 = 褐色 #8B4513, 萨 = 蓝 #0070C0,
+           牧 = 浅灰2 #D9D9D9, 骑 = 深粉 #E75480
         ============================================================ */
         function getExcelBgColor(name) {
             if (!name) return '';
-            if (name.includes('战')) return '#E26B0A'; // 深橙1
-            if (name.includes('德')) return '#FFC000'; // 橙
+            if (name.includes('德')) return '#E26B0A'; // 深橙1
+            if (name.includes('战')) return '#8B4513'; // 褐色
             if (name.includes('萨')) return '#0070C0'; // 蓝
             if (name.includes('牧')) return '#D9D9D9'; // 浅灰2
-            if (name.includes('骑')) return '#D99694'; // 浅红3
+            if (name.includes('骑')) return '#E75480'; // 深粉色
             return '';
         }
 
@@ -796,8 +826,7 @@
             const bg = getExcelBgColor(name);
             if (!bg) return `<span class="excel-cell">${name}</span>`;
             // Use white text on dark backgrounds for readability
-            const darkBgs = ['#E26B0A', '#0070C0'];
-            const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+            const textColor = DARK_BG_COLORS.includes(bg) ? '#fff' : '#000';
             return `<span class="excel-cell" style="background:${bg};color:${textColor};">${name}</span>`;
         }
 
@@ -855,13 +884,18 @@
             deadPlayers = new Set();
             dwarfReplaced = false;
             replacedTankKey = null;
+            replacedBoss = null;
+            lordDead = false;
+            const lordBtn = document.getElementById('btn-lord-dead');
+            if (lordBtn) lordBtn.disabled = false;
 
             // Switch to battle UI
             stacks = 0;
             progressFraction = 0;
             document.getElementById('setup-phase').style.display = 'none';
             document.getElementById('battle-phase').style.display = 'block';
-            document.getElementById('event-log-content').innerHTML = '';
+            const logEl = document.getElementById('event-log-content');
+            if (logEl) logEl.innerHTML = '';
 
             renderSidebar();
             updateDisplay(null);
@@ -955,6 +989,18 @@
             grid.innerHTML = '';
 
             for (const bossName of ALL_BOSSES) {
+                // Lord dead: show killed card
+                if (bossName === '大领主' && lordDead) {
+                    const card = document.createElement('div');
+                    card.className = 'boss-card boss-dead';
+                    card.innerHTML = `
+                        <div class="boss-title">大领主</div>
+                        <div class="boss-dead-label">💀 已击杀</div>
+                    `;
+                    grid.appendChild(card);
+                    continue;
+                }
+
                 const info = assignment[bossName];
                 const prevInfo = prev ? prev[bossName] : null;
                 const changed = prevInfo && prevInfo.tankKey !== info.tankKey;
@@ -987,6 +1033,18 @@
             nextGrid.innerHTML = '';
 
             for (const bossName of ALL_BOSSES) {
+                // Lord dead: show killed card in preview too
+                if (bossName === '大领主' && lordDead) {
+                    const card = document.createElement('div');
+                    card.className = 'boss-card boss-dead';
+                    card.innerHTML = `
+                        <div class="boss-title">大领主</div>
+                        <div class="boss-dead-label">💀 已击杀</div>
+                    `;
+                    nextGrid.appendChild(card);
+                    continue;
+                }
+
                 const info = nextAssignment[bossName];
                 const card = document.createElement('div');
                 card.className = 'boss-card';
@@ -1014,6 +1072,7 @@
         ============================================================ */
         function addEvent(s, text, important) {
             const log = document.getElementById('event-log-content');
+            if (!log) return;
             const div = document.createElement('div');
             div.className = 'event-item' + (important ? ' important' : '');
             div.innerHTML = `<span class="time-tag">[第${s}层]</span>${text}`;
@@ -1090,6 +1149,14 @@
 
                     const nameSpan = document.createElement('span');
                     nameSpan.className = 'role-name ' + m.role + (isDead ? ' dead' : '');
+                    const bg = getExcelBgColor(m.name);
+                    if (bg) {
+                        const textColor = DARK_BG_COLORS.includes(bg) ? '#fff' : '#000';
+                        nameSpan.style.background = bg;
+                        nameSpan.style.color = textColor;
+                        nameSpan.style.padding = '1px 6px';
+                        nameSpan.style.borderRadius = '3px';
+                    }
                     nameSpan.textContent = m.name;
 
                     const btnsDiv = document.createElement('div');
@@ -1122,12 +1189,27 @@
             deadPlayers.add(playerName);
 
             // Check if this is a non-G tank and dwarf hasn't replaced anyone yet
-            if (!dwarfReplaced) {
+            // Also check that G is alive before attempting replacement
+            if (!dwarfReplaced && !deadPlayers.has(tanks.G)) {
                 for (const key of ['A', 'B', 'C', 'D', 'E', 'F']) {
                     if (tanks[key] === playerName) {
-                        dwarfReplaced = true;
-                        replacedTankKey = key;
-                        addEvent(stacks, `☠ ${playerName}(坦克${key}) 阵亡，${tanks.G} 替换其位置`, true);
+                        // Find which boss this tank is currently at
+                        const currentAssignment = getAssignment(stacks);
+                        let foundBoss = null;
+                        for (const boss of BOSS_CYCLE) {
+                            if (currentAssignment[boss].tankKey === key) {
+                                // Skip dead lord boss
+                                if (boss === '大领主' && lordDead) continue;
+                                foundBoss = boss;
+                                break;
+                            }
+                        }
+                        if (foundBoss) {
+                            dwarfReplaced = true;
+                            replacedTankKey = key;
+                            replacedBoss = foundBoss;
+                            addEvent(stacks, `☠ ${playerName}(坦克${key}) 阵亡，${tanks.G} 替换至${foundBoss}`, true);
+                        }
                         break;
                     }
                 }
@@ -1145,10 +1227,20 @@
             if (dwarfReplaced && replacedTankKey && tanks[replacedTankKey] === playerName) {
                 dwarfReplaced = false;
                 replacedTankKey = null;
+                replacedBoss = null;
                 addEvent(stacks, `✦ ${playerName} 复活，${tanks.G} 回归矮子`, true);
             }
 
             renderSidebar();
+            updateDisplay(null);
+        }
+
+        function markLordDead() {
+            if (lordDead) return;
+            lordDead = true;
+            const btn = document.getElementById('btn-lord-dead');
+            if (btn) btn.disabled = true;
+            addEvent(stacks, '💀 大领主已击杀！不再参与轮换', true);
             updateDisplay(null);
         }
     </script>
