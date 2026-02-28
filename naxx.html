@@ -468,14 +468,22 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a1628; }
         ::-webkit-scrollbar-thumb { background: #1a3a6a; border-radius: 3px; }
+
+        /* ===== Excel-style character cell ===== */
+        .excel-cell {
+            display: inline-block;
+            border: 1px solid #888;
+            padding: 2px 6px;
+            font-size: 13px;
+            color: #000;
+            min-width: 40px;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
     <h1>⚔ 天启四骑士战斗辅助 ⚔</h1>
-    <p style="text-align:center;margin-bottom:10px">
-        <a href="index.html" style="color:#888;font-size:12px;text-decoration:none">← 返回过马路小游戏</a>
-    </p>
 
     <!-- ===== Setup Phase ===== -->
     <div id="setup-phase">
@@ -725,10 +733,18 @@
                 const key = bossToTankKey[boss];
                 const tankName = key ? tanks[key] : null;
                 const isDead = tankName ? deadPlayers.has(tankName) : false;
+                let healerNames = key ? getHealersForTank(key, s).filter(h => h && !deadPlayers.has(h)) : [];
+                // When dwarf tank G replaces a dead tank (dwarfReplaced=true, replacedTankKey set),
+                // the dead tank's healers follow G wherever G is positioned.
+                if (dwarfReplaced && replacedTankKey && key === 'G') {
+                    const extraHealers = getHealersForTank(replacedTankKey, s)
+                        .filter(h => h && !deadPlayers.has(h) && !healerNames.includes(h));
+                    healerNames = [...healerNames, ...extraHealers];
+                }
                 result[boss] = {
                     tankKey: key,
                     tankName: isDead ? null : tankName,
-                    healerNames: key ? getHealersForTank(key, s).filter(h => h && !deadPlayers.has(h)) : []
+                    healerNames: healerNames
                 };
             }
             return result;
@@ -758,6 +774,31 @@
                 }
             }
             return [];
+        }
+
+        /* ============================================================
+           Excel-style background color based on character name
+           色号来自Excel主题色：
+           深橙1 = #E26B0A, 橙 = #FFC000, 蓝 = #0070C0,
+           浅灰2 = #D9D9D9, 浅红3 = #D99694
+        ============================================================ */
+        function getExcelBgColor(name) {
+            if (!name) return '';
+            if (name.includes('战')) return '#E26B0A'; // 深橙1
+            if (name.includes('德')) return '#FFC000'; // 橙
+            if (name.includes('萨')) return '#0070C0'; // 蓝
+            if (name.includes('牧')) return '#D9D9D9'; // 浅灰2
+            if (name.includes('骑')) return '#D99694'; // 浅红3
+            return '';
+        }
+
+        function excelCellHtml(name) {
+            const bg = getExcelBgColor(name);
+            if (!bg) return `<span class="excel-cell">${name}</span>`;
+            // Use white text on dark backgrounds for readability
+            const darkBgs = ['#E26B0A', '#0070C0'];
+            const textColor = darkBgs.includes(bg) ? '#fff' : '#000';
+            return `<span class="excel-cell" style="background:${bg};color:${textColor};">${name}</span>`;
         }
 
         /* ============================================================
@@ -925,13 +966,13 @@
                 const prevHealers = prevInfo ? prevInfo.healerNames : [];
                 const healerDivs = info.healerNames.map(h => {
                     const isNew = prevHealers.length > 0 && !prevHealers.includes(h);
-                    return `<div class="healer-name${isNew ? ' returning' : ''}">${h}</div>`;
+                    return `<div class="healer-name${isNew ? ' returning' : ''}">${excelCellHtml(h)}</div>`;
                 }).join('');
 
                 card.innerHTML = `
                     <div class="boss-title">${bossName}</div>
                     <div class="role-label">坦克 T</div>
-                    <div class="tank-name">${info.tankName || '（空缺）'}</div>
+                    <div class="tank-name">${info.tankName ? excelCellHtml(info.tankName) : '（空缺）'}</div>
                     ${info.healerNames.length > 0
                         ? `<div class="role-label">治疗 奶</div>${healerDivs}`
                         : ''}
@@ -951,13 +992,13 @@
                 card.className = 'boss-card';
 
                 const healerDivs = info.healerNames.map(h => {
-                    return `<div class="healer-name">${h}</div>`;
+                    return `<div class="healer-name">${excelCellHtml(h)}</div>`;
                 }).join('');
 
                 card.innerHTML = `
                     <div class="boss-title">${bossName}</div>
                     <div class="role-label">坦克 T</div>
-                    <div class="tank-name">${info.tankName || '（空缺）'}</div>
+                    <div class="tank-name">${info.tankName ? excelCellHtml(info.tankName) : '（空缺）'}</div>
                     ${info.healerNames.length > 0
                         ? `<div class="role-label">治疗 奶</div>${healerDivs}`
                         : ''}
